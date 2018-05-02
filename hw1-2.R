@@ -67,8 +67,24 @@ rgdp_ts <- ts(real_gdp[["rgdp"]], c(1947,1),, 4)
 real_gdp[["X1"]][1]
 real_gdp[["X1"]][length(real_gdp[["X1"]])]
 
+ind <- (1973 - 1947) * 4 + 2
+# トレンド変化前
+before <- rgdp_ts[1:ind]
+# トレンド変化後
+after <- rgdp_ts[ind:length(rgdp_ts)]
+# トレンド項の作成
+before_trend <- time(before)
+after_trend <- time(after)
 
+# トレンド回帰
+before_result <- lm(before ~ before_trend)
+before_gap <- residuals((before_result))
+after_result <- lm(after ~ after_trend)
+after_gap <- residuals((after_result))
 
+kinked_gaps <- ts(c(data.frame(before_gap)$before_gap, data.frame(after_gap)$after_gap),c(1947,1),,4)
+
+ts.plot(kinked_gap)
 
 
 
