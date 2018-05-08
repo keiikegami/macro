@@ -23,10 +23,11 @@ log_optimal_p <- which.min(AIC_log)
 # maの方が圧倒的にAICが小さい。のでmaの方がいいんじゃね？
 
 
-# (3)
+
+# (4)
 
 ## (a)
-gap <- ts(official_gap[["gap"]])
+gap <- ts(official_gap[["gap"]], c(1949,1),,4)
 ts.plot(gap)
 
 ## (b)
@@ -34,11 +35,12 @@ install.packages("mFilter")
 library(mFilter)
 real_gdp <- read_csv("~/Desktop/2018summer/macro/hw1/empirics/real_gdp.csv")
 
-rgdp <- ts(real_gdp[["rgdp"]])
+rgdp <- ts(real_gdp[["rgdp"]], c(1947),,4)
 hp_result <- hpfilter(rgdp)
 hp_trend <- hp_result$trend
 hp_cycle <- hp_result$cycle
 ts.plot(hp_cycle)
+
 
 ## (c) unit root test
 install.packages("tseries")
@@ -61,7 +63,18 @@ for (i in 1:5){
 diff_optimal_p <- which.min(AIC_diff)
 
 ## これで選ばれるのが2なので、AR(2)における公式を使って出せる。
-## むしろAR(2)の時の問題をMorleyでちゃんととくのが大事
+result <- arima(first_diff_rgdp, order = c(2,0,0))
+beta1 <- result$coef[1]
+beta2 <- result$coef[2]
+BN_trend <- 1:length(rgdp)-2
+for (i in 3:length(rgdp)){
+  BN_trend[i-2] <- rgdp[i] + ((beta1+beta2)*first_diff_rgdp[i] + beta2*first_diff_rgdp[i-1])/(1-beta1-beta2)
+}
+BN_cycle <- ts(rgdp[3:length(rgdp)] - BN_trend, c(1947,7),,4)
+ts.plot(BN_cycle)
+
+
+## (d) トレンド
 rgdp_ts <- ts(real_gdp[["rgdp"]], c(1947,1),, 4)
 
 real_gdp[["X1"]][1]
@@ -82,7 +95,7 @@ before_gap <- residuals((before_result))
 after_result <- lm(after ~ after_trend)
 after_gap <- residuals((after_result))
 
-kinked_gaps <- ts(c(data.frame(before_gap)$before_gap, data.frame(after_gap)$after_gap),c(1947,1),,4)
+kinked_gap <- ts(c(data.frame(before_gap)$before_gap, data.frame(after_gap)$after_gap),c(1947,1),,4)
 
 ts.plot(kinked_gap)
 
